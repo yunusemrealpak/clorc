@@ -143,10 +143,12 @@ const program = new Command()
       spinner.stop(`❌ Error: ${p.message}`);
     });
 
-    // SIGINT handling
+    // Shutdown handling — covers all exit scenarios
     let shuttingDown = false;
-    const handleShutdown = () => {
+    const handleShutdown = (reason?: string) => {
       if (shuttingDown) {
+        // Second signal = force kill
+        controller.abort();
         process.exit(1);
       }
       shuttingDown = true;
@@ -157,8 +159,30 @@ const program = new Command()
       process.exit(0);
     };
 
-    process.on('SIGINT', handleShutdown);
-    process.on('SIGTERM', handleShutdown);
+    // Ctrl+C
+    process.on('SIGINT', () => handleShutdown('SIGINT'));
+    // kill command
+    process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+    // Terminal closed (Windows terminal close / SSH disconnect)
+    process.on('SIGHUP', () => handleShutdown('SIGHUP'));
+    // Ensure child processes are killed on ANY exit
+    process.on('exit', () => {
+      // exit handler is sync-only — kill is sync (taskkill/process.kill)
+      controller.abort();
+    });
+    // Uncaught errors — kill children before crashing
+    process.on('uncaughtException', (err) => {
+      console.error(`\n❌ Uncaught exception: ${err.message}`);
+      controller.abort();
+      if (dashboard) dashboard.stop();
+      process.exit(1);
+    });
+    process.on('unhandledRejection', (reason) => {
+      console.error(`\n❌ Unhandled rejection: ${reason}`);
+      controller.abort();
+      if (dashboard) dashboard.stop();
+      process.exit(1);
+    });
 
     // Run
     const startTime = Date.now();
@@ -183,8 +207,6 @@ const program = new Command()
 
     // Cleanup
     if (dashboard) dashboard.stop();
-    process.removeListener('SIGINT', handleShutdown);
-    process.removeListener('SIGTERM', handleShutdown);
   });
 
 program.parse();

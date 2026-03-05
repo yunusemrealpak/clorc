@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from 'node:child_process';
+import { spawn, execSync, type ChildProcess } from 'node:child_process';
 import { writeFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -110,11 +110,14 @@ export class ClaudeRunner {
     const shellCommand = `${catCmd} "${tempFile}" | claude ${flags.join(' ')}`;
 
     return new Promise<ClaudeRunnerResult>((resolve) => {
+      const isWin = process.platform === 'win32';
       const child = spawn(shellCommand, {
         cwd: options.workingDirectory || process.cwd(),
         stdio: ['ignore', 'pipe', 'pipe'],
         shell: true,
         windowsHide: true,
+        // Unix: create process group so we can kill the whole tree with -pid
+        detached: !isWin,
       });
 
       this.activeProcesses.add(child);
@@ -131,10 +134,7 @@ export class ClaudeRunner {
       const timeoutMs = options.timeout || 600000;
       const timer = setTimeout(() => {
         timedOut = true;
-        child.kill('SIGTERM');
-        setTimeout(() => {
-          if (!child.killed) child.kill('SIGKILL');
-        }, 5000);
+        this.killProcessTree(child);
       }, timeoutMs);
 
       child.stdout?.on('data', (data: Buffer) => {
@@ -268,14 +268,33 @@ export class ClaudeRunner {
     try { unlinkSync(filePath); } catch { /* ignore */ }
   }
 
+  /**
+   * Kills the entire process tree (cmd.exe + claude + children).
+   * On Windows: taskkill /F /T /PID kills all descendants.
+   * On Unix: negative PID kills the process group.
+   */
+  private killProcessTree(proc: ChildProcess): void {
+    if (!proc.pid) return;
+
+    try {
+      if (process.platform === 'win32') {
+        execSync(`taskkill /F /T /PID ${proc.pid}`, { stdio: 'ignore' });
+      } else {
+        // Kill process group (negative PID)
+        process.kill(-proc.pid, 'SIGTERM');
+        setTimeout(() => {
+          try { process.kill(-proc.pid!, 'SIGKILL'); } catch { /* already dead */ }
+        }, 3000);
+      }
+    } catch {
+      // Process already dead — ignore
+      try { proc.kill('SIGKILL'); } catch { /* ignore */ }
+    }
+  }
+
   kill(): void {
     for (const proc of this.activeProcesses) {
-      if (!proc.killed) {
-        proc.kill('SIGTERM');
-        setTimeout(() => {
-          if (!proc.killed) proc.kill('SIGKILL');
-        }, 5000);
-      }
+      this.killProcessTree(proc);
     }
   }
 
