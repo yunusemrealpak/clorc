@@ -1,0 +1,45 @@
+{
+  "name": "clorc",
+  "version": "1.0.0",
+  "description": "Claude Code Autonomous Multi-Agent Orchestrator",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "clorc": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "claude-code",
+    "multi-agent",
+    "orchestration",
+    "cli",
+    "autonomous",
+    "live-dashboard"
+  ],
+  "files": [
+    "dist",
+    "dist/dashboard",
+    "skills"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^13.1.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "@types/ws": "^8.5.14",
+    "tsup": "^8.4.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

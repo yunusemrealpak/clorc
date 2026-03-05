@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>clorc Dashboard</title>
+<style>
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --border: #30363d;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #484f58;
+    --accent-blue: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-red: #f85149;
+    --accent-yellow: #d29922;
+    --accent-purple: #bc8cff;
+    --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    min-width: 1200px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ─── Header ─────────────────────────────────── */
+  #header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  #header .left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  #header .logo {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent-purple);
+  }
+
+  #header .mission {
+    color: var(--text-secondary);
+    max-width: 500px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #header .right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .badge.running { background: rgba(88,166,255,0.15); color: var(--accent-blue); }
+  .badge.completed { background: rgba(63,185,80,0.15); color: var(--accent-green); }
+  .badge.failed { background: rgba(248,81,73,0.15); color: var(--accent-red); }
+
+  #timer {
+    font-family: var(--font-mono);
+    color: var(--text-secondary);
+    font-size: 15px;
+  }
+
+  #milestone-progress {
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+
+  /* ─── Main Layout ────────────────────────────── */
+  #main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ─── Flow Panel (Left) ──────────────────────── */
+  #flow-panel {
+    width: 340px;
+    min-width: 340px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  .milestone-box {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+
+  .milestone-header {
+    padding: 10px 14px;
+    font-weight: 600;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .milestone-agents {
+    padding: 10px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .agent-box {
+    flex: 1;
+    min-width: 80px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    text-align: center;
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: var(--bg-secondary);
+  }
+
+  .agent-box:hover { border-color: var(--accent-blue); }
+  .agent-box.active { border-color: var(--accent-blue); box-shadow: 0 0 8px rgba(88,166,255,0.3); }
+
+  .agent-box .icon { font-size: 16px; margin-bottom: 4px; }
+  .agent-box .label { color: var(--text-secondary); }
+
+  .agent-box.pending .icon::after { content: '\23F3'; }
+  .agent-box.running .icon::after { content: '\27F3'; }
+  .agent-box.done .icon::after { content: '\2705'; }
+  .agent-box.failed .icon::after { content: '\274C'; }
+  .agent-box.manual .icon::after { content: '\26A0\FE0F'; }
+
+  .agent-box.running {
+    border-color: var(--accent-blue);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 4px rgba(88,166,255,0.2); }
+    50% { box-shadow: 0 0 12px rgba(88,166,255,0.5); }
+  }
+
+  .fix-badge {
+    display: inline-block;
+    background: rgba(210,153,34,0.15);
+    color: var(--accent-yellow);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    margin-left: 6px;
+  }
+
+  .connector {
+    width: 2px;
+    height: 12px;
+    background: var(--border);
+    margin: 0 auto;
+  }
+
+  /* ─── Detail Panel (Right) ───────────────────── */
+  #detail-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #detail-tabs {
+    display: flex;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    border-bottom: 2px solid transparent;
+    font-size: 13px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .tab:hover { color: var(--text-primary); }
+  .tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+
+  .tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: none;
+  }
+
+  .tab-content.active { display: block; }
+
+  .tab-content pre {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: var(--text-primary);
+  }
+
+  #detail-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+
+  .findings-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .findings-table th {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  .findings-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .severity-critical { color: var(--accent-red); font-weight: 600; }
+  .severity-major { color: var(--accent-yellow); font-weight: 600; }
+  .severity-minor { color: var(--text-secondary); }
+
+  /* ─── Event Log (Bottom) ─────────────────────── */
+  #event-log {
+    height: 200px;
+    min-height: 120px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  #event-log-header {
+    padding: 8px 16px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg-secondary);
+    z-index: 1;
+  }
+
+  #event-log-entries {
+    padding: 4px 0;
+  }
+
+  .event-entry {
+    padding: 3px 16px;
+    display: flex;
+    gap: 12px;
+    line-height: 1.6;
+  }
+
+  .event-entry:hover { background: var(--bg-tertiary); }
+  .event-entry .time { color: var(--text-muted); min-width: 70px; }
+  .event-entry .type { color: var(--accent-blue); min-width: 140px; }
+  .event-entry .desc { color: var(--text-secondary); }
+  .event-entry.current { background: rgba(88,166,255,0.08); }
+
+  /* ─── Scrollbar ──────────────────────────────── */
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div id="header">
+  <div class="left">
+    <span class="logo">clorc</span>
+    <span class="mission" id="mission-text">Connecting...</span>
+  </div>
+  <div class="right">
+    <span id="milestone-progress"></span>
+    <span id="timer">00:00</span>
+    <span class="badge running" id="status-badge">Connecting</span>
+  </div>
+</div>
+
+<!-- Main -->
+<div id="main">
+  <!-- Flow Panel -->
+  <div id="flow-panel">
+    <div id="flow-content">
+      <p style="color:var(--text-muted);text-align:center;padding:40px 0">Waiting for plan...</p>
+    </div>
+  </div>
+
+  <!-- Detail Panel -->
+  <div id="detail-panel">
+    <div id="detail-tabs" style="display:none">
+      <div class="tab active" data-tab="prompt">Prompt</div>
+      <div class="tab" data-tab="output">Output</div>
+      <div class="tab" data-tab="review">Review</div>
+    </div>
+    <div id="tab-prompt" class="tab-content active"><pre id="prompt-content"></pre></div>
+    <div id="tab-output" class="tab-content"><pre id="output-content"></pre></div>
+    <div id="tab-review" class="tab-content"><div id="review-content"></div></div>
+    <div id="detail-placeholder">Click an agent box to view details</div>
+  </div>
+</div>
+
+<!-- Event Log -->
+<div id="event-log">
+  <div id="event-log-header">Event Log</div>
+  <div id="event-log-entries"></div>
+</div>
+
+<script>
+(function() {
+  // ─── State ──────────────────────────────────────
+  const state = {
+    mission: '',
+    startedAt: null,
+    milestones: [],
+    agents: {},       // key: "agent-milestone" → { agent, milestone, status, prompt, output, tasks, duration, findings }
+    currentAgent: null,
+    selectedAgent: null,
+    events: [],
+  };
+
+  let autoScroll = true;
+  let timerInterval = null;
+
+  // ─── DOM refs ───────────────────────────────────
+  const $missionText = document.getElementById('mission-text');
+  const $timer = document.getElementById('timer');
+  const $statusBadge = document.getElementById('status-badge');
+  const $milestoneProgress = document.getElementById('milestone-progress');
+  const $flowContent = document.getElementById('flow-content');
+  const $detailTabs = document.getElementById('detail-tabs');
+  const $detailPlaceholder = document.getElementById('detail-placeholder');
+  const $promptContent = document.getElementById('prompt-content');
+  const $outputContent = document.getElementById('output-content');
+  const $reviewContent = document.getElementById('review-content');
+  const $eventEntries = document.getElementById('event-log-entries');
+  const $eventLog = document.getElementById('event-log');
+
+  // ─── Tab switching ──────────────────────────────
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ─── Auto-scroll logic ─────────────────────────
+  $eventLog.addEventListener('scroll', () => {
+    const el = $eventLog;
+    autoScroll = (el.scrollHeight - el.scrollTop - el.clientHeight) < 40;
+  });
+
+  // ─── Timer ──────────────────────────────────────
+  function startTimer() {
+    timerInterval = setInterval(() => {
+      if (!state.startedAt) return;
+      const elapsed = Date.now() - new Date(state.startedAt).getTime();
+      $timer.textContent = formatDuration(elapsed);
+    }, 1000);
+  }
+
+  function formatDuration(ms) {
+    const s = Math.floor(ms / 1000);
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+  }
+
+  // ─── Agent key ──────────────────────────────────
+  function agentKey(agent, milestone) {
+    return agent + '-' + milestone;
+  }
+
+  // ─── Event handlers ─────────────────────────────
+  const handlers = {
+    'mission:start'(p) {
+      state.mission = p.mission;
+      state.startedAt = p.timestamp;
+      $missionText.textContent = p.mission;
+      $statusBadge.textContent = 'Running';
+      $statusBadge.className = 'badge running';
+      startTimer();
+    },
+
+    'plan:created'(p) {
+      state.milestones = p.milestones.map(m => ({
+        ...m,
+        status: 'pending',
+        agents: { backend: 'pending', frontend: 'pending', reviewer: 'pending' },
+        fixCycles: 0,
+      }));
+      renderFlow();
+      $milestoneProgress.textContent = 'Milestone 0/' + state.milestones.length;
+    },
+
+    'milestone:start'(p) {
+      const ms = state.milestones.find(m => m.id === p.id);
+      if (ms) ms.status = 'running';
+      $milestoneProgress.textContent = 'Milestone ' + p.index + '/' + p.total;
+      renderFlow();
+    },
+
+    'milestone:done'(p) {
+      const ms = state.milestones.find(m => m.id === p.id);
+      if (ms) ms.status = p.status === 'done' ? 'done' : 'manual';
+      renderFlow();
+    },
+
+    'agent:start'(p) {
+      const key = agentKey(p.agent, p.milestone);
+      state.agents[key] = {
+        agent: p.agent,
+        milestone: p.milestone,
+        status: 'running',
+        prompt: p.prompt,
+        output: '',
+        tasks: p.tasks,
+        duration: 0,
+        findings: [],
+      };
+      state.currentAgent = key;
+
+      // Update milestone agent status
+      const ms = state.milestones.find(m => m.id === p.milestone);
+      if (ms && ms.agents) ms.agents[p.agent] = 'running';
+
+      renderFlow();
+      if (!state.selectedAgent) selectAgent(key);
+    },
+
+    'agent:output'(p) {
+      const key = agentKey(p.agent, p.milestone);
+      if (state.agents[key]) {
+        state.agents[key].output += p.chunk;
+        if (state.selectedAgent === key) {
+          $outputContent.textContent = state.agents[key].output;
+          // Auto-scroll output
+          const outputTab = document.getElementById('tab-output');
+          outputTab.scrollTop = outputTab.scrollHeight;
+        }
+      }
+    },
+
+    'agent:done'(p) {
+      const key = agentKey(p.agent, p.milestone);
+      if (state.agents[key]) {
+        state.agents[key].status = p.success ? 'done' : 'failed';
+        state.agents[key].duration = p.duration;
+        if (p.output && !state.agents[key].output) state.agents[key].output = p.output;
+      }
+
+      const ms = state.milestones.find(m => m.id === p.milestone);
+      if (ms && ms.agents) ms.agents[p.agent] = p.success ? 'done' : 'failed';
+
+      if (state.currentAgent === key) state.currentAgent = null;
+      renderFlow();
+    },
+
+    'review:done'(p) {
+      const key = agentKey('reviewer', p.milestone);
+      if (state.agents[key]) {
+        state.agents[key].findings = p.findings || [];
+      }
+      if (state.selectedAgent === key) renderReview(state.agents[key]);
+    },
+
+    'fix:start'(p) {
+      const ms = state.milestones.find(m => m.id === p.milestone);
+      if (ms) ms.fixCycles = p.cycle;
+      renderFlow();
+    },
+
+    'verify:done'(p) {
+      const ms = state.milestones.find(m => m.id === p.milestone);
+      if (ms && p.verdict === 'PASS') {
+        ms.agents.reviewer = 'done';
+      }
+      renderFlow();
+    },
+
+    'mission:done'(p) {
+      clearInterval(timerInterval);
+      $timer.textContent = formatDuration(p.duration);
+      const allDone = p.milestonesCompleted === p.total;
+      $statusBadge.textContent = allDone ? 'Completed' : 'Partial';
+      $statusBadge.className = 'badge ' + (allDone ? 'completed' : 'failed');
+    },
+
+    'error'(p) {
+      // Errors shown in event log
+    },
+  };
+
+  // ─── Render flow diagram ───────────────────────
+  function renderFlow() {
+    if (state.milestones.length === 0) return;
+    let html = '';
+
+    state.milestones.forEach((ms, i) => {
+      if (i > 0) html += '<div class="connector"></div>';
+
+      const statusIcon = ms.status === 'done' ? '&#x2705;'
+        : ms.status === 'running' ? '&#x27F3;'
+        : ms.status === 'manual' ? '&#x26A0;&#xFE0F;'
+        : '&#x23F3;';
+
+      html += '<div class="milestone-box">';
+      html += '<div class="milestone-header">';
+      html += '<span>' + ms.id + ': ' + escHtml(ms.name) + '</span>';
+      html += '<span>' + statusIcon;
+      if (ms.fixCycles > 0) html += '<span class="fix-badge">Fix ' + ms.fixCycles + '</span>';
+      html += '</span></div>';
+      html += '<div class="milestone-agents">';
+
+      ['backend', 'frontend', 'reviewer'].forEach(agent => {
+        const agentStatus = ms.agents?.[agent] || 'pending';
+        const key = agentKey(agent, ms.id);
+        const isSelected = state.selectedAgent === key;
+        const cls = 'agent-box ' + agentStatus + (isSelected ? ' active' : '');
+        html += '<div class="' + cls + '" data-key="' + key + '">';
+        html += '<div class="icon"></div>';
+        html += '<div class="label">' + capitalize(agent) + '</div>';
+        html += '</div>';
+      });
+
+      html += '</div></div>';
+    });
+
+    $flowContent.innerHTML = html;
+
+    // Attach click handlers
+    $flowContent.querySelectorAll('.agent-box').forEach(el => {
+      el.addEventListener('click', () => selectAgent(el.dataset.key));
+    });
+  }
+
+  // ─── Select agent for detail view ──────────────
+  function selectAgent(key) {
+    state.selectedAgent = key;
+    const agentData = state.agents[key];
+
+    if (!agentData) {
+      $detailTabs.style.display = 'none';
+      $detailPlaceholder.style.display = 'flex';
+      $detailPlaceholder.textContent = 'No data yet for this agent';
+      return;
+    }
+
+    $detailTabs.style.display = 'flex';
+    $detailPlaceholder.style.display = 'none';
+    $promptContent.textContent = agentData.prompt || '(no prompt)';
+    $outputContent.textContent = agentData.output || '(no output yet)';
+    renderReview(agentData);
+
+    // Highlight selected in flow
+    $flowContent.querySelectorAll('.agent-box').forEach(el => {
+      el.classList.toggle('active', el.dataset.key === key);
+    });
+  }
+
+  // ─── Render review findings ─────────────────────
+  function renderReview(agentData) {
+    if (!agentData || !agentData.findings || agentData.findings.length === 0) {
+      $reviewContent.innerHTML = '<p style="color:var(--text-muted);padding:20px">No findings</p>';
+      return;
+    }
+
+    let html = '<table class="findings-table">';
+    html += '<tr><th>ID</th><th>Severity</th><th>Assignee</th><th>Description</th></tr>';
+    agentData.findings.forEach(f => {
+      const sevClass = 'severity-' + f.severity;
+      html += '<tr>';
+      html += '<td>' + escHtml(f.id) + '</td>';
+      html += '<td class="' + sevClass + '">' + escHtml(f.severity) + '</td>';
+      html += '<td>' + escHtml(f.assignee) + '</td>';
+      html += '<td>' + escHtml(f.description) + '</td>';
+      html += '</tr>';
+    });
+    html += '</table>';
+    $reviewContent.innerHTML = html;
+  }
+
+  // ─── Add event log entry ────────────────────────
+  function addEventLogEntry(event) {
+    const time = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const desc = formatEventDesc(event);
+    const isCurrent = state.currentAgent && event.type === 'agent:start';
+
+    const div = document.createElement('div');
+    div.className = 'event-entry' + (isCurrent ? ' current' : '');
+    div.innerHTML = '<span class="time">' + time + '</span>'
+      + '<span class="type">' + escHtml(event.type) + '</span>'
+      + '<span class="desc">' + escHtml(desc) + '</span>';
+    $eventEntries.appendChild(div);
+
+    if (autoScroll) {
+      $eventLog.scrollTop = $eventLog.scrollHeight;
+    }
+  }
+
+  function formatEventDesc(event) {
+    const p = event.payload;
+    switch (event.type) {
+      case 'mission:start': return p.mission?.substring(0, 60);
+      case 'plan:created': return p.milestones?.length + ' milestones, ' + p.taskCount + ' tasks';
+      case 'milestone:start': return p.id + ': ' + p.title;
+      case 'milestone:done': return p.id + ' ' + p.status;
+      case 'agent:start': return p.agent + ' ' + p.milestone + ' [' + (p.tasks?.join(', ') || '') + ']';
+      case 'agent:done': return p.agent + ' ' + p.milestone + (p.success ? ' done' : ' FAILED') + ' (' + formatDuration(p.duration) + ')';
+      case 'review:done': return p.milestone + ' ' + p.verdict + ' (' + (p.findings?.length || 0) + ' findings)';
+      case 'fix:start': return p.milestone + ' cycle ' + p.cycle;
+      case 'verify:done': return p.milestone + ' cycle ' + p.cycle + ' ' + p.verdict;
+      case 'mission:done': return p.milestonesCompleted + '/' + p.total + ' milestones (' + formatDuration(p.duration) + ')';
+      case 'error': return p.message;
+      default: return JSON.stringify(p).substring(0, 80);
+    }
+  }
+
+  // ─── Process event ─────────────────────────────
+  function processEvent(event) {
+    state.events.push(event);
+    const handler = handlers[event.type];
+    if (handler) handler(event.payload);
+    if (event.type !== 'agent:output') {
+      addEventLogEntry(event);
+    }
+  }
+
+  // ─── WebSocket ──────────────────────────────────
+  function connect() {
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(protocol + '//' + location.host);
+
+    ws.onopen = () => {
+      $statusBadge.textContent = 'Connected';
+      $statusBadge.className = 'badge running';
+    };
+
+    ws.onmessage = (msg) => {
+      try {
+        const data = JSON.parse(msg.data);
+        if (data.type === 'snapshot') {
+          // Replay all events from snapshot
+          const events = data.payload?.events || [];
+          events.forEach(e => processEvent(e));
+        } else {
+          processEvent(data);
+        }
+      } catch (e) {
+        console.error('Failed to parse message:', e);
+      }
+    };
+
+    ws.onclose = () => {
+      $statusBadge.textContent = 'Disconnected';
+      $statusBadge.className = 'badge failed';
+      // Reconnect after 3 seconds
+      setTimeout(connect, 3000);
+    };
+
+    ws.onerror = () => {
+      ws.close();
+    };
+  }
+
+  // ─── Helpers ────────────────────────────────────
+  function escHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  // ─── Init ───────────────────────────────────────
+  connect();
+})();
+</script>
+</body>
+</html>
