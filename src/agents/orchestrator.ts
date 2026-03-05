@@ -41,7 +41,7 @@ export class OrchestratorRunner {
         model: this.config.model,
         workingDirectory: this.cwd,
         timeout: this.config.timeout,
-        outputFormat: 'text',
+        outputFormat: 'stream-json',
       },
       'orchestrator',
       'planning',

@@ -100,6 +100,7 @@ export class ClaudeRunner {
     const flags = this.buildFlags(options);
     const bus = EventBus.getInstance();
     const startTime = Date.now();
+    const isStreamJson = options.outputFormat === 'stream-json';
 
     // Write prompt to temp file to avoid shell escaping issues
     const tempFile = join(tmpdir(), `clorc-prompt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.txt`);
@@ -122,6 +123,11 @@ export class ClaudeRunner {
       let stderr = '';
       let timedOut = false;
 
+      // For stream-json: accumulate text and capture session_id
+      let streamText = '';
+      let streamSessionId: string | undefined;
+      let lineBuffer = '';
+
       const timeoutMs = options.timeout || 600000;
       const timer = setTimeout(() => {
         timedOut = true;
@@ -134,8 +140,37 @@ export class ClaudeRunner {
       child.stdout?.on('data', (data: Buffer) => {
         const chunk = data.toString();
         stdout += chunk;
-        if (agentType && milestone) {
-          bus.emitEvent('agent:output', { agent: agentType, milestone, chunk });
+
+        if (isStreamJson) {
+          // Parse stream-json line by line, emit text chunks for live streaming
+          lineBuffer += chunk;
+          const lines = lineBuffer.split('\n');
+          lineBuffer = lines.pop() || ''; // keep incomplete last line
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+            try {
+              const obj = JSON.parse(trimmed);
+
+              if (obj.type === 'assistant' && obj.subtype === 'text' && obj.text) {
+                streamText += obj.text;
+                if (agentType && milestone) {
+                  bus.emitEvent('agent:output', { agent: agentType, milestone, chunk: obj.text });
+                }
+              } else if (obj.type === 'result') {
+                streamSessionId = obj.session_id || obj.conversation_id;
+                if (typeof obj.result === 'string') {
+                  streamText = obj.result;
+                }
+              }
+            } catch { /* skip unparseable lines */ }
+          }
+        } else {
+          // text format: emit raw chunks directly
+          if (agentType && milestone) {
+            bus.emitEvent('agent:output', { agent: agentType, milestone, chunk });
+          }
         }
       });
 
@@ -153,7 +188,7 @@ export class ClaudeRunner {
         if (timedOut) {
           resolve({
             success: false,
-            output: stdout || stderr || 'Process timed out',
+            output: streamText || stdout || stderr || 'Process timed out',
             stderr,
             exitCode: 124,
             duration,
@@ -161,17 +196,39 @@ export class ClaudeRunner {
           return;
         }
 
-        // Extract session ID from JSON output
-        const parsed = this.tryParseJsonOutput(stdout, options.outputFormat);
+        // Process any remaining buffered line
+        if (isStreamJson && lineBuffer.trim()) {
+          try {
+            const obj = JSON.parse(lineBuffer.trim());
+            if (obj.type === 'result') {
+              streamSessionId = obj.session_id || obj.conversation_id;
+              if (typeof obj.result === 'string') streamText = obj.result;
+            } else if (obj.type === 'assistant' && obj.subtype === 'text' && obj.text) {
+              streamText += obj.text;
+            }
+          } catch { /* ignore */ }
+        }
 
-        resolve({
-          success: exitCode === 0,
-          output: parsed.text,
-          stderr,
-          exitCode,
-          duration,
-          sessionId: parsed.sessionId,
-        });
+        if (isStreamJson) {
+          resolve({
+            success: exitCode === 0,
+            output: streamText || stdout,
+            stderr,
+            exitCode,
+            duration,
+            sessionId: streamSessionId,
+          });
+        } else {
+          const parsed = this.tryParseJsonOutput(stdout, options.outputFormat);
+          resolve({
+            success: exitCode === 0,
+            output: parsed.text,
+            stderr,
+            exitCode,
+            duration,
+            sessionId: parsed.sessionId,
+          });
+        }
       });
 
       child.on('error', (err) => {
