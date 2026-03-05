@@ -12,12 +12,18 @@ export class ClaudeRunner {
   private rateLimitRetries = 0;
 
   buildFlags(options: ClaudeRunnerOptions): string[] {
+    const outputFormat = options.outputFormat || 'text';
     const flags: string[] = [
       '--dangerously-skip-permissions',
-      '--output-format', options.outputFormat || 'text',
+      '--output-format', outputFormat,
       '--max-turns', String(options.maxTurns || 25),
       '--model', options.model || 'sonnet',
     ];
+
+    // stream-json requires --verbose in print mode
+    if (outputFormat === 'stream-json') {
+      flags.push('--verbose');
+    }
 
     if (options.resumeSessionId) {
       flags.push('--resume', options.resumeSessionId);
