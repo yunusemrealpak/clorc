@@ -6,730 +6,1466 @@
 <title>clorc Dashboard</title>
 <style>
   :root {
-    --bg-primary: #0d1117;
-    --bg-secondary: #161b22;
-    --bg-tertiary: #21262d;
+    --bg-0: #0a0e14;
+    --bg-1: #0d1117;
+    --bg-2: #161b22;
+    --bg-3: #21262d;
+    --bg-4: #2d333b;
     --border: #30363d;
-    --text-primary: #e6edf3;
-    --text-secondary: #8b949e;
-    --text-muted: #484f58;
-    --accent-blue: #58a6ff;
-    --accent-green: #3fb950;
-    --accent-red: #f85149;
-    --accent-yellow: #d29922;
-    --accent-purple: #bc8cff;
-    --font-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+    --border-light: #3d444d;
+    --text-0: #f0f6fc;
+    --text-1: #e6edf3;
+    --text-2: #8b949e;
+    --text-3: #484f58;
+    --blue: #58a6ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --orange: #db6d28;
+    --purple: #bc8cff;
+    --cyan: #39d2c0;
+    --pink: #f778ba;
+    --mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   body {
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    min-width: 1200px;
+    background: var(--bg-0);
+    color: var(--text-1);
+    font-family: var(--sans);
+    font-size: 13px;
     height: 100vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    user-select: none;
   }
 
-  /* ─── Header ─────────────────────────────────── */
+  /* ═══ HEADER ═══════════════════════════════════════ */
   #header {
-    background: var(--bg-secondary);
+    background: var(--bg-2);
     border-bottom: 1px solid var(--border);
-    padding: 12px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-  }
-
-  #header .left {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  #header .logo {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--accent-purple);
-  }
-
-  #header .mission {
-    color: var(--text-secondary);
-    max-width: 500px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  #header .right {
+    padding: 0 20px;
+    height: 48px;
     display: flex;
     align-items: center;
     gap: 20px;
+    flex-shrink: 0;
   }
-
-  .badge {
-    padding: 4px 10px;
-    border-radius: 12px;
+  .logo {
+    font-size: 17px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--purple), var(--blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+  .header-sep { width: 1px; height: 24px; background: var(--border); }
+  #mission-text {
+    color: var(--text-2);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 12px;
+  }
+  .stats-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .stat {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .stat .val {
+    color: var(--text-0);
+    font-family: var(--mono);
     font-weight: 600;
-  }
-
-  .badge.running { background: rgba(88,166,255,0.15); color: var(--accent-blue); }
-  .badge.completed { background: rgba(63,185,80,0.15); color: var(--accent-green); }
-  .badge.failed { background: rgba(248,81,73,0.15); color: var(--accent-red); }
-
-  #timer {
-    font-family: var(--font-mono);
-    color: var(--text-secondary);
-    font-size: 15px;
-  }
-
-  #milestone-progress {
-    color: var(--text-secondary);
     font-size: 13px;
   }
+  .stat .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dot-blue { background: var(--blue); animation: blink 1.5s ease-in-out infinite; }
+  .dot-red { background: var(--red); }
+  .dot-gray { background: var(--text-3); }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  #timer {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-1);
+    min-width: 50px;
+    text-align: right;
+  }
 
-  /* ─── Main Layout ────────────────────────────── */
+  /* ═══ MAIN LAYOUT ═════════════════════════════════ */
   #main {
     display: flex;
     flex: 1;
     overflow: hidden;
   }
 
-  /* ─── Flow Panel (Left) ──────────────────────── */
-  #flow-panel {
-    width: 340px;
-    min-width: 340px;
-    background: var(--bg-secondary);
+  /* ═══ LEFT PANEL - PIPELINE ═══════════════════════ */
+  #pipeline {
+    width: 280px;
+    min-width: 280px;
+    background: var(--bg-1);
     border-right: 1px solid var(--border);
-    overflow-y: auto;
-    padding: 16px;
-  }
-
-  .milestone-box {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    margin-bottom: 12px;
-    overflow: hidden;
-  }
-
-  .milestone-header {
-    padding: 10px 14px;
-    font-weight: 600;
-    font-size: 13px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .milestone-agents {
-    padding: 10px 14px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .agent-box {
-    flex: 1;
-    min-width: 80px;
-    padding: 8px 10px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    text-align: center;
-    font-size: 12px;
-    cursor: pointer;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    background: var(--bg-secondary);
-  }
-
-  .agent-box:hover { border-color: var(--accent-blue); }
-  .agent-box.active { border-color: var(--accent-blue); box-shadow: 0 0 8px rgba(88,166,255,0.3); }
-
-  .agent-box .icon { font-size: 16px; margin-bottom: 4px; }
-  .agent-box .label { color: var(--text-secondary); }
-
-  .agent-box.pending .icon::after { content: '\23F3'; }
-  .agent-box.running .icon::after { content: '\27F3'; }
-  .agent-box.done .icon::after { content: '\2705'; }
-  .agent-box.failed .icon::after { content: '\274C'; }
-  .agent-box.manual .icon::after { content: '\26A0\FE0F'; }
-
-  .agent-box.running {
-    border-color: var(--accent-blue);
-    animation: pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { box-shadow: 0 0 4px rgba(88,166,255,0.2); }
-    50% { box-shadow: 0 0 12px rgba(88,166,255,0.5); }
-  }
-
-  .fix-badge {
-    display: inline-block;
-    background: rgba(210,153,34,0.15);
-    color: var(--accent-yellow);
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 8px;
-    margin-left: 6px;
-  }
-
-  .connector {
-    width: 2px;
-    height: 12px;
-    background: var(--border);
-    margin: 0 auto;
-  }
-
-  /* ─── Detail Panel (Right) ───────────────────── */
-  #detail-panel {
-    flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
   }
-
-  #detail-tabs {
-    display: flex;
-    background: var(--bg-secondary);
+  #pipeline-header {
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-3);
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
   }
-
-  .tab {
-    padding: 10px 20px;
-    cursor: pointer;
-    color: var(--text-secondary);
-    border-bottom: 2px solid transparent;
-    font-size: 13px;
-    transition: color 0.2s, border-color 0.2s;
-  }
-
-  .tab:hover { color: var(--text-primary); }
-  .tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
-
-  .tab-content {
+  #pipeline-scroll {
     flex: 1;
     overflow-y: auto;
-    padding: 16px;
-    display: none;
+    padding: 12px;
   }
 
-  .tab-content.active { display: block; }
-
-  .tab-content pre {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    color: var(--text-primary);
+  /* Orchestrator card */
+  .orch-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: border-color 0.2s;
   }
-
-  #detail-placeholder {
+  .orch-card:hover { border-color: var(--purple); }
+  .orch-card.active { border-color: var(--purple); box-shadow: 0 0 12px rgba(188,140,255,0.15); }
+  .orch-card .orch-icon {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    background: rgba(188,140,255,0.12);
     display: flex;
     align-items: center;
     justify-content: center;
-    flex: 1;
-    color: var(--text-muted);
     font-size: 15px;
+    flex-shrink: 0;
   }
+  .orch-card .orch-info { flex: 1; }
+  .orch-card .orch-title { font-weight: 600; font-size: 12px; }
+  .orch-card .orch-sub { font-size: 11px; color: var(--text-3); margin-top: 2px; }
 
-  .findings-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
+  /* Milestone card */
+  .ms-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s;
   }
+  .ms-card.ms-running { border-color: var(--blue); }
+  .ms-card.ms-done { border-color: var(--green); }
+  .ms-card.ms-manual { border-color: var(--yellow); }
 
-  .findings-table th {
-    text-align: left;
+  .ms-head {
     padding: 8px 12px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text-secondary);
-    font-weight: 600;
-  }
-
-  .findings-table td {
-    padding: 8px 12px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
-  }
-
-  .severity-critical { color: var(--accent-red); font-weight: 600; }
-  .severity-major { color: var(--accent-yellow); font-weight: 600; }
-  .severity-minor { color: var(--text-secondary); }
-
-  /* ─── Event Log (Bottom) ─────────────────────── */
-  #event-log {
-    height: 200px;
-    min-height: 120px;
-    background: var(--bg-secondary);
-    border-top: 1px solid var(--border);
-    overflow-y: auto;
-    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 12px;
+    cursor: pointer;
+  }
+  .ms-head:hover { background: var(--bg-3); }
+  .ms-idx {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    background: var(--bg-4);
+    color: var(--text-2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    min-width: 28px;
+    text-align: center;
+  }
+  .ms-running .ms-idx { background: rgba(88,166,255,0.15); color: var(--blue); }
+  .ms-done .ms-idx { background: rgba(63,185,80,0.12); color: var(--green); }
+  .ms-name { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ms-status-icon { font-size: 13px; }
+  .ms-fix-badge {
+    font-size: 9px;
+    font-weight: 700;
+    background: rgba(210,153,34,0.15);
+    color: var(--yellow);
+    padding: 1px 6px;
+    border-radius: 8px;
+  }
+
+  /* Progress bar */
+  .ms-progress-bar {
+    height: 2px;
+    background: var(--bg-4);
+  }
+  .ms-progress-fill {
+    height: 100%;
+    background: var(--blue);
+    transition: width 0.5s ease;
+  }
+  .ms-done .ms-progress-fill { background: var(--green); }
+
+  /* Agent row inside milestone */
+  .ms-agents {
+    padding: 6px 8px 8px;
+    display: flex;
+    gap: 4px;
+  }
+  .ag {
+    flex: 1;
+    padding: 6px 4px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg-3);
+    position: relative;
+  }
+  .ag:hover { border-color: var(--border-light); }
+  .ag.ag-selected { border-color: var(--blue); background: rgba(88,166,255,0.08); }
+  .ag .ag-icon { font-size: 13px; margin-bottom: 2px; }
+  .ag .ag-label { font-size: 10px; color: var(--text-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+  .ag .ag-dur { font-size: 9px; color: var(--text-3); font-family: var(--mono); margin-top: 2px; }
+
+  .ag.ag-pending .ag-icon::before { content: '\25CB'; color: var(--text-3); }
+  .ag.ag-running .ag-icon::before { content: '\25CF'; color: var(--blue); }
+  .ag.ag-done .ag-icon::before { content: '\25CF'; color: var(--green); }
+  .ag.ag-failed .ag-icon::before { content: '\25CF'; color: var(--red); }
+
+  .ag.ag-running {
+    border-color: rgba(88,166,255,0.3);
+    animation: agpulse 2s ease-in-out infinite;
+  }
+  @keyframes agpulse {
+    0%, 100% { box-shadow: 0 0 0 rgba(88,166,255,0); }
+    50% { box-shadow: 0 0 8px rgba(88,166,255,0.2); }
+  }
+
+  .pipe-line {
+    width: 1px;
+    height: 8px;
+    background: var(--border);
+    margin: 0 auto;
+  }
+
+  /* ═══ CENTER - TERMINAL ═══════════════════════════ */
+  #center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  /* Agent tabs */
+  #agent-tabs {
+    display: flex;
+    align-items: center;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    overflow-x: auto;
+    gap: 0;
+  }
+  #agent-tabs::-webkit-scrollbar { height: 0; }
+  .atab {
+    padding: 8px 16px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--text-3);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .atab:hover { color: var(--text-2); background: var(--bg-3); }
+  .atab.atab-active { color: var(--text-0); border-bottom-color: var(--blue); }
+  .atab .atab-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+  .atab .atab-dot.running { background: var(--blue); animation: blink 1.5s ease-in-out infinite; }
+  .atab .atab-dot.done { background: var(--green); }
+  .atab .atab-dot.failed { background: var(--red); }
+
+  .atab-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
     flex-shrink: 0;
   }
 
-  #event-log-header {
-    padding: 8px 16px;
-    color: var(--text-secondary);
+  /* Terminal */
+  #terminal {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-0);
+  }
+  #term-toolbar {
+    display: flex;
+    align-items: center;
+    padding: 6px 14px;
+    background: var(--bg-1);
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  #term-agent-name {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--purple);
+    font-weight: 600;
+  }
+  #term-status {
+    font-size: 11px;
+    color: var(--text-3);
+  }
+  .term-btn {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.15s;
+  }
+  .term-btn:hover { background: var(--bg-4); color: var(--text-1); }
+  .term-btn.active { background: rgba(88,166,255,0.12); color: var(--blue); border-color: rgba(88,166,255,0.3); }
+  .spacer { flex: 1; }
+
+  #term-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: var(--text-1);
+    user-select: text;
+  }
+  #term-body::-webkit-scrollbar { width: 6px; }
+  #term-body::-webkit-scrollbar-track { background: transparent; }
+  #term-body::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 3px; }
+
+  .term-cursor {
+    display: inline-block;
+    width: 7px; height: 14px;
+    background: var(--green);
+    animation: cursorblink 1s step-end infinite;
+    vertical-align: text-bottom;
+    margin-left: 1px;
+  }
+  @keyframes cursorblink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  #term-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    color: var(--text-3);
+    gap: 12px;
+  }
+  #term-placeholder .ph-icon { font-size: 40px; opacity: 0.3; }
+  #term-placeholder .ph-text { font-size: 13px; }
+
+  /* Search bar in terminal */
+  #term-search {
+    display: none;
+    padding: 6px 14px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    gap: 8px;
+  }
+  #term-search.visible { display: flex; }
+  #term-search input {
+    flex: 1;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text-1);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    outline: none;
+  }
+  #term-search input:focus { border-color: var(--blue); }
+  #term-search .match-count { font-size: 11px; color: var(--text-3); min-width: 60px; }
+
+  /* ═══ RIGHT PANEL - DETAILS ═══════════════════════ */
+  #right-panel {
+    width: 320px;
+    min-width: 280px;
+    background: var(--bg-1);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #right-tabs {
+    display: flex;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .rtab {
+    flex: 1;
+    padding: 9px 0;
+    text-align: center;
+    cursor: pointer;
+    color: var(--text-3);
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    background: var(--bg-secondary);
-    z-index: 1;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
   }
+  .rtab:hover { color: var(--text-2); }
+  .rtab.active { color: var(--blue); border-bottom-color: var(--blue); }
 
-  #event-log-entries {
-    padding: 4px 0;
+  .rpanel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: none;
   }
+  .rpanel.active { display: block; }
+  .rpanel::-webkit-scrollbar { width: 6px; }
+  .rpanel::-webkit-scrollbar-track { background: transparent; }
+  .rpanel::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 3px; }
 
-  .event-entry {
-    padding: 3px 16px;
-    display: flex;
-    gap: 12px;
+  /* Prompt panel */
+  #prompt-panel pre {
+    font-family: var(--mono);
+    font-size: 11px;
     line-height: 1.6;
+    color: var(--text-2);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    user-select: text;
   }
 
-  .event-entry:hover { background: var(--bg-tertiary); }
-  .event-entry .time { color: var(--text-muted); min-width: 70px; }
-  .event-entry .type { color: var(--accent-blue); min-width: 140px; }
-  .event-entry .desc { color: var(--text-secondary); }
-  .event-entry.current { background: rgba(88,166,255,0.08); }
+  /* Tasks panel */
+  .task-group-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 0 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+  .task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 4px;
+    font-size: 12px;
+    border-radius: 4px;
+  }
+  .task-item:hover { background: var(--bg-2); }
+  .task-check {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    border: 1.5px solid var(--text-3);
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+  }
+  .task-check.done { background: var(--green); border-color: var(--green); color: #000; }
+  .task-check.running { border-color: var(--blue); }
+  .task-check.done::after { content: '\2713'; }
+  .task-check.running::after { content: ''; }
+  .task-id { font-family: var(--mono); font-size: 10px; color: var(--text-3); min-width: 35px; }
+  .task-title { flex: 1; color: var(--text-2); }
+  .task-title.done { text-decoration: line-through; opacity: 0.5; }
+  .task-assignee {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+  .task-assignee.backend { background: rgba(57,210,192,0.12); color: var(--cyan); }
+  .task-assignee.frontend { background: rgba(247,120,186,0.12); color: var(--pink); }
 
-  /* ─── Scrollbar ──────────────────────────────── */
+  /* Review panel */
+  .finding-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+  .finding-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .finding-id { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text-2); }
+  .sev {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+  .sev-critical { background: rgba(248,81,73,0.15); color: var(--red); }
+  .sev-major { background: rgba(210,153,34,0.15); color: var(--yellow); }
+  .sev-minor { background: rgba(139,148,158,0.15); color: var(--text-2); }
+  .finding-desc { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+  .finding-suggestion { font-size: 11px; color: var(--text-3); margin-top: 4px; font-style: italic; }
+  .review-verdict {
+    text-align: center;
+    padding: 16px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .review-verdict.pass { color: var(--green); }
+  .review-verdict.fail { color: var(--red); }
+
+  /* ═══ BOTTOM - EVENT LOG ═════════════════════════ */
+  #event-log {
+    height: 180px;
+    min-height: 100px;
+    background: var(--bg-1);
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  #elog-header {
+    display: flex;
+    align-items: center;
+    padding: 6px 16px;
+    gap: 10px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  #elog-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-3);
+  }
+  .elog-filter {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--sans);
+  }
+  .elog-filter:hover { background: var(--bg-4); }
+  .elog-filter.active { background: rgba(88,166,255,0.12); color: var(--blue); border-color: rgba(88,166,255,0.3); }
+  #elog-count { font-size: 10px; color: var(--text-3); font-family: var(--mono); }
+  #elog-scroll {
+    flex: 1;
+    overflow-y: auto;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  #elog-scroll::-webkit-scrollbar { width: 6px; }
+  #elog-scroll::-webkit-scrollbar-track { background: transparent; }
+  #elog-scroll::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 3px; }
+
+  .ev {
+    display: flex;
+    padding: 2px 16px;
+    gap: 10px;
+    line-height: 1.7;
+  }
+  .ev:hover { background: var(--bg-2); }
+  .ev .ev-time { color: var(--text-3); min-width: 65px; flex-shrink: 0; }
+  .ev .ev-icon { min-width: 16px; text-align: center; flex-shrink: 0; }
+  .ev .ev-type { min-width: 120px; flex-shrink: 0; }
+  .ev .ev-desc { color: var(--text-2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .ev-type.t-mission { color: var(--purple); }
+  .ev-type.t-plan { color: var(--cyan); }
+  .ev-type.t-milestone { color: var(--blue); }
+  .ev-type.t-agent { color: var(--green); }
+  .ev-type.t-review { color: var(--yellow); }
+  .ev-type.t-fix { color: var(--orange); }
+  .ev-type.t-error { color: var(--red); }
+  .ev-type.t-verify { color: var(--cyan); }
+
+  .ev.ev-error { background: rgba(248,81,73,0.05); }
+  .ev.ev-error .ev-desc { color: var(--red); }
+
+  /* ═══ RESIZE HANDLE ══════════════════════════════ */
+  #elog-resize {
+    height: 4px;
+    background: transparent;
+    cursor: ns-resize;
+    flex-shrink: 0;
+    position: relative;
+  }
+  #elog-resize:hover, #elog-resize.dragging {
+    background: var(--blue);
+    opacity: 0.5;
+  }
+
+  /* ═══ SCROLLBAR ════════════════════════════════ */
   ::-webkit-scrollbar { width: 8px; }
-  ::-webkit-scrollbar-track { background: var(--bg-primary); }
-  ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+  /* ═══ EMPTY STATE ═════════════════════════════ */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: var(--text-3);
+    gap: 8px;
+    text-align: center;
+  }
+  .empty-state .es-icon { font-size: 24px; opacity: 0.4; }
+  .empty-state .es-text { font-size: 12px; }
+
+  /* ═══ TOGGLE PANEL BTN ═══════════════════════ */
+  .toggle-panel {
+    background: none;
+    border: none;
+    color: var(--text-3);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 4px;
+  }
+  .toggle-panel:hover { background: var(--bg-3); color: var(--text-2); }
 </style>
 </head>
 <body>
 
-<!-- Header -->
+<!-- ═══ HEADER ═══ -->
 <div id="header">
-  <div class="left">
-    <span class="logo">clorc</span>
-    <span class="mission" id="mission-text">Connecting...</span>
-  </div>
-  <div class="right">
-    <span id="milestone-progress"></span>
+  <span class="logo">clorc</span>
+  <div class="header-sep"></div>
+  <span id="mission-text">Waiting for connection...</span>
+  <div class="stats-group">
+    <div class="stat"><span class="dot dot-gray" id="conn-dot"></span><span id="conn-label">Offline</span></div>
+    <div class="stat">Milestones <span class="val" id="ms-counter">-/-</span></div>
+    <div class="stat">Agents <span class="val" id="agent-counter">0</span></div>
     <span id="timer">00:00</span>
-    <span class="badge running" id="status-badge">Connecting</span>
   </div>
 </div>
 
-<!-- Main -->
+<!-- ═══ MAIN ═══ -->
 <div id="main">
-  <!-- Flow Panel -->
-  <div id="flow-panel">
-    <div id="flow-content">
-      <p style="color:var(--text-muted);text-align:center;padding:40px 0">Waiting for plan...</p>
+
+  <!-- LEFT: Pipeline -->
+  <div id="pipeline">
+    <div id="pipeline-header">Pipeline</div>
+    <div id="pipeline-scroll">
+      <div id="pipeline-content">
+        <div class="empty-state"><div class="es-icon">&#9673;</div><div class="es-text">Waiting for plan...</div></div>
+      </div>
     </div>
   </div>
 
-  <!-- Detail Panel -->
-  <div id="detail-panel">
-    <div id="detail-tabs" style="display:none">
-      <div class="tab active" data-tab="prompt">Prompt</div>
-      <div class="tab" data-tab="output">Output</div>
-      <div class="tab" data-tab="review">Review</div>
+  <!-- CENTER: Terminal -->
+  <div id="center">
+    <div id="agent-tabs">
+      <div class="atab atab-active" data-key="__live" id="tab-live">
+        <span class="atab-dot running"></span>Live
+      </div>
+      <div class="atab-right">
+        <button class="toggle-panel" id="btn-toggle-right" title="Toggle details panel">&#9776;</button>
+      </div>
     </div>
-    <div id="tab-prompt" class="tab-content active"><pre id="prompt-content"></pre></div>
-    <div id="tab-output" class="tab-content"><pre id="output-content"></pre></div>
-    <div id="tab-review" class="tab-content"><div id="review-content"></div></div>
-    <div id="detail-placeholder">Click an agent box to view details</div>
+    <div id="term-search"><input type="text" placeholder="Search output..." id="search-input"><span class="match-count" id="search-count"></span><button class="term-btn" id="search-close">&#x2715;</button></div>
+    <div id="terminal">
+      <div id="term-toolbar">
+        <span id="term-agent-name">-</span>
+        <span id="term-status">idle</span>
+        <div class="spacer"></div>
+        <button class="term-btn" id="btn-search" title="Search (Ctrl+F)">Search</button>
+        <button class="term-btn active" id="btn-follow" title="Auto-follow output">Follow</button>
+        <button class="term-btn" id="btn-copy" title="Copy output">Copy</button>
+        <button class="term-btn" id="btn-wrap" title="Toggle word wrap">Wrap</button>
+      </div>
+      <div id="term-body"></div>
+      <div id="term-placeholder">
+        <div class="ph-icon">&#9655;</div>
+        <div class="ph-text">Select an agent to view output</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Details -->
+  <div id="right-panel">
+    <div id="right-tabs">
+      <div class="rtab active" data-panel="tasks-panel">Tasks</div>
+      <div class="rtab" data-panel="review-panel">Review</div>
+      <div class="rtab" data-panel="prompt-panel">Prompt</div>
+    </div>
+    <div class="rpanel active" id="tasks-panel">
+      <div class="empty-state"><div class="es-icon">&#9744;</div><div class="es-text">Tasks will appear after planning</div></div>
+    </div>
+    <div class="rpanel" id="review-panel">
+      <div class="empty-state"><div class="es-icon">&#9878;</div><div class="es-text">No review data yet</div></div>
+    </div>
+    <div class="rpanel" id="prompt-panel">
+      <pre id="prompt-content" style="color:var(--text-3)">No agent selected</pre>
+    </div>
   </div>
 </div>
 
-<!-- Event Log -->
+<!-- ═══ EVENT LOG ═══ -->
+<div id="elog-resize"></div>
 <div id="event-log">
-  <div id="event-log-header">Event Log</div>
-  <div id="event-log-entries"></div>
+  <div id="elog-header">
+    <span id="elog-title">Event Log</span>
+    <div class="spacer"></div>
+    <button class="elog-filter active" data-filter="all">All</button>
+    <button class="elog-filter" data-filter="agent">Agents</button>
+    <button class="elog-filter" data-filter="milestone">Milestones</button>
+    <button class="elog-filter" data-filter="error">Errors</button>
+    <span id="elog-count">0 events</span>
+  </div>
+  <div id="elog-scroll"><div id="elog-entries"></div></div>
 </div>
 
 <script>
 (function() {
-  // ─── State ──────────────────────────────────────
-  const state = {
+  // ═══ STATE ═══════════════════════════════════════
+  const S = {
     mission: '',
     startedAt: null,
-    milestones: [],
-    agents: {},       // key: "agent-milestone" → { agent, milestone, status, prompt, output, tasks, duration, findings }
-    currentAgent: null,
-    selectedAgent: null,
+    milestones: [],       // { id, name, status, agents: {be,fe,rv}, fixCycles, tasks: [] }
+    agents: {},           // key → { agent, milestone, status, prompt, output, tasks, duration, findings, verdict }
+    agentOrder: [],       // keys in order of creation
+    selectedKey: '__live',
+    liveKey: null,
     events: [],
+    elogFilter: 'all',
+    follow: true,
+    wrap: true,
+    tasks: [],
+    totalTasks: 0,
+    searchVisible: false,
   };
 
-  let autoScroll = true;
   let timerInterval = null;
+  let elogAutoScroll = true;
 
-  // ─── DOM refs ───────────────────────────────────
-  const $missionText = document.getElementById('mission-text');
-  const $timer = document.getElementById('timer');
-  const $statusBadge = document.getElementById('status-badge');
-  const $milestoneProgress = document.getElementById('milestone-progress');
-  const $flowContent = document.getElementById('flow-content');
-  const $detailTabs = document.getElementById('detail-tabs');
-  const $detailPlaceholder = document.getElementById('detail-placeholder');
-  const $promptContent = document.getElementById('prompt-content');
-  const $outputContent = document.getElementById('output-content');
-  const $reviewContent = document.getElementById('review-content');
-  const $eventEntries = document.getElementById('event-log-entries');
-  const $eventLog = document.getElementById('event-log');
+  // ═══ DOM ═════════════════════════════════════════
+  const $ = id => document.getElementById(id);
+  const $missionText = $('mission-text');
+  const $timer = $('timer');
+  const $connDot = $('conn-dot');
+  const $connLabel = $('conn-label');
+  const $msCounter = $('ms-counter');
+  const $agentCounter = $('agent-counter');
+  const $pipeContent = $('pipeline-content');
+  const $agentTabs = $('agent-tabs');
+  const $termBody = $('term-body');
+  const $termPlaceholder = $('term-placeholder');
+  const $termAgentName = $('term-agent-name');
+  const $termStatus = $('term-status');
+  const $promptContent = $('prompt-content');
+  const $tasksPanel = $('tasks-panel');
+  const $reviewPanel = $('review-panel');
+  const $elogEntries = $('elog-entries');
+  const $elogScroll = $('elog-scroll');
+  const $elogCount = $('elog-count');
 
-  // ─── Tab switching ──────────────────────────────
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-    });
-  });
+  // ═══ HELPERS ═════════════════════════════════════
+  function esc(s) { return s ? String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''; }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function dur(ms) {
+    const s = Math.floor(ms/1000), m = Math.floor(s/60), sec = s%60;
+    if (m === 0) return sec + 's';
+    return m + 'm ' + String(sec).padStart(2,'0') + 's';
+  }
+  function akey(agent, ms) { return agent + ':' + ms; }
 
-  // ─── Auto-scroll logic ─────────────────────────
-  $eventLog.addEventListener('scroll', () => {
-    const el = $eventLog;
-    autoScroll = (el.scrollHeight - el.scrollTop - el.clientHeight) < 40;
-  });
-
-  // ─── Timer ──────────────────────────────────────
+  // ═══ TIMER ═══════════════════════════════════════
   function startTimer() {
     timerInterval = setInterval(() => {
-      if (!state.startedAt) return;
-      const elapsed = Date.now() - new Date(state.startedAt).getTime();
-      $timer.textContent = formatDuration(elapsed);
+      if (!S.startedAt) return;
+      const el = Date.now() - new Date(S.startedAt).getTime();
+      $timer.textContent = dur(el);
     }, 1000);
   }
 
-  function formatDuration(ms) {
-    const s = Math.floor(ms / 1000);
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
-  }
-
-  // ─── Agent key ──────────────────────────────────
-  function agentKey(agent, milestone) {
-    return agent + '-' + milestone;
-  }
-
-  // ─── Event handlers ─────────────────────────────
-  const handlers = {
+  // ═══ EVENT HANDLERS ═════════════════════════════
+  const H = {
     'mission:start'(p) {
-      state.mission = p.mission;
-      state.startedAt = p.timestamp;
+      S.mission = p.mission;
+      S.startedAt = p.timestamp;
       $missionText.textContent = p.mission;
-      $statusBadge.textContent = 'Running';
-      $statusBadge.className = 'badge running';
+      $connDot.className = 'dot dot-blue';
+      $connLabel.textContent = 'Running';
       startTimer();
     },
 
     'plan:created'(p) {
-      state.milestones = p.milestones.map(m => ({
-        ...m,
-        status: 'pending',
-        agents: { backend: 'pending', frontend: 'pending', reviewer: 'pending' },
-        fixCycles: 0,
+      S.milestones = p.milestones.map(m => ({
+        ...m, status:'pending', agents:{backend:'pending',frontend:'pending',reviewer:'pending'},
+        fixCycles:0, tasks:[]
       }));
-      renderFlow();
-      $milestoneProgress.textContent = 'Milestone 0/' + state.milestones.length;
+      S.totalTasks = p.taskCount;
+      $msCounter.textContent = '0/' + S.milestones.length;
+      renderPipeline();
+      renderTasks();
     },
 
     'milestone:start'(p) {
-      const ms = state.milestones.find(m => m.id === p.id);
+      const ms = S.milestones.find(m => m.id === p.id);
       if (ms) ms.status = 'running';
-      $milestoneProgress.textContent = 'Milestone ' + p.index + '/' + p.total;
-      renderFlow();
+      $msCounter.textContent = (p.index-1) + '/' + p.total;
+      renderPipeline();
     },
 
     'milestone:done'(p) {
-      const ms = state.milestones.find(m => m.id === p.id);
+      const ms = S.milestones.find(m => m.id === p.id);
       if (ms) ms.status = p.status === 'done' ? 'done' : 'manual';
-      renderFlow();
+      const done = S.milestones.filter(m => m.status === 'done').length;
+      $msCounter.textContent = done + '/' + S.milestones.length;
+      renderPipeline();
     },
 
     'agent:start'(p) {
-      const key = agentKey(p.agent, p.milestone);
-      state.agents[key] = {
-        agent: p.agent,
-        milestone: p.milestone,
-        status: 'running',
-        prompt: p.prompt,
-        output: '',
-        tasks: p.tasks,
-        duration: 0,
-        findings: [],
+      const key = akey(p.agent, p.milestone);
+      S.agents[key] = {
+        agent: p.agent, milestone: p.milestone, status:'running',
+        prompt: p.prompt, output:'', tasks: p.tasks||[],
+        duration:0, findings:[], verdict: null,
       };
-      state.currentAgent = key;
+      if (!S.agentOrder.includes(key)) S.agentOrder.push(key);
+      S.liveKey = key;
 
-      // Update milestone agent status
-      const ms = state.milestones.find(m => m.id === p.milestone);
+      const ms = S.milestones.find(m => m.id === p.milestone);
       if (ms && ms.agents) ms.agents[p.agent] = 'running';
 
-      renderFlow();
-      if (!state.selectedAgent) selectAgent(key);
+      $agentCounter.textContent = S.agentOrder.length;
+      renderPipeline();
+      renderAgentTabs();
+
+      // Auto-select live
+      if (S.selectedKey === '__live') showAgent(key, true);
     },
 
     'agent:output'(p) {
-      const key = agentKey(p.agent, p.milestone);
-      if (state.agents[key]) {
-        state.agents[key].output += p.chunk;
-        if (state.selectedAgent === key) {
-          $outputContent.textContent = state.agents[key].output;
-          // Auto-scroll output
-          const outputTab = document.getElementById('tab-output');
-          outputTab.scrollTop = outputTab.scrollHeight;
+      const key = akey(p.agent, p.milestone);
+      const ad = S.agents[key];
+      if (ad) {
+        ad.output += p.chunk;
+        // If viewing this agent (or live), update terminal
+        const viewing = S.selectedKey === '__live' ? S.liveKey : S.selectedKey;
+        if (viewing === key) {
+          appendTerminal(p.chunk);
         }
       }
     },
 
     'agent:done'(p) {
-      const key = agentKey(p.agent, p.milestone);
-      if (state.agents[key]) {
-        state.agents[key].status = p.success ? 'done' : 'failed';
-        state.agents[key].duration = p.duration;
-        if (p.output && !state.agents[key].output) state.agents[key].output = p.output;
+      const key = akey(p.agent, p.milestone);
+      const ad = S.agents[key];
+      if (ad) {
+        ad.status = p.success ? 'done' : 'failed';
+        ad.duration = p.duration;
+        if (p.output && !ad.output) ad.output = p.output;
       }
 
-      const ms = state.milestones.find(m => m.id === p.milestone);
+      const ms = S.milestones.find(m => m.id === p.milestone);
       if (ms && ms.agents) ms.agents[p.agent] = p.success ? 'done' : 'failed';
 
-      if (state.currentAgent === key) state.currentAgent = null;
-      renderFlow();
+      if (S.liveKey === key) S.liveKey = null;
+
+      renderPipeline();
+      renderAgentTabs();
+      // Update terminal status if viewing this agent
+      const viewing = S.selectedKey === '__live' ? key : S.selectedKey;
+      if (viewing === key) updateTermToolbar(key);
     },
 
     'review:done'(p) {
-      const key = agentKey('reviewer', p.milestone);
-      if (state.agents[key]) {
-        state.agents[key].findings = p.findings || [];
+      const key = akey('reviewer', p.milestone);
+      const ad = S.agents[key];
+      if (ad) {
+        ad.findings = p.findings || [];
+        ad.verdict = p.verdict;
       }
-      if (state.selectedAgent === key) renderReview(state.agents[key]);
+      renderReview();
     },
 
     'fix:start'(p) {
-      const ms = state.milestones.find(m => m.id === p.milestone);
+      const ms = S.milestones.find(m => m.id === p.milestone);
       if (ms) ms.fixCycles = p.cycle;
-      renderFlow();
+      renderPipeline();
     },
 
     'verify:done'(p) {
-      const ms = state.milestones.find(m => m.id === p.milestone);
-      if (ms && p.verdict === 'PASS') {
-        ms.agents.reviewer = 'done';
+      if (p.verdict === 'PASS') {
+        const ms = S.milestones.find(m => m.id === p.milestone);
+        if (ms) ms.agents.reviewer = 'done';
+        renderPipeline();
       }
-      renderFlow();
     },
 
     'mission:done'(p) {
       clearInterval(timerInterval);
-      $timer.textContent = formatDuration(p.duration);
+      $timer.textContent = dur(p.duration);
       const allDone = p.milestonesCompleted === p.total;
-      $statusBadge.textContent = allDone ? 'Completed' : 'Partial';
-      $statusBadge.className = 'badge ' + (allDone ? 'completed' : 'failed');
+      $connDot.className = 'dot ' + (allDone ? 'dot-green' : 'dot-red');
+      $connLabel.textContent = allDone ? 'Complete' : 'Partial';
+      $msCounter.textContent = p.milestonesCompleted + '/' + p.total;
+      renderAgentTabs();
     },
 
-    'error'(p) {
-      // Errors shown in event log
-    },
+    'error'(p) {},
   };
 
-  // ─── Render flow diagram ───────────────────────
-  function renderFlow() {
-    if (state.milestones.length === 0) return;
-    let html = '';
+  // ═══ RENDER: PIPELINE ═══════════════════════════
+  function renderPipeline() {
+    if (S.milestones.length === 0) return;
 
-    state.milestones.forEach((ms, i) => {
-      if (i > 0) html += '<div class="connector"></div>';
+    // Orchestrator card
+    const orchKey = akey('orchestrator','planning');
+    const orchData = S.agents[orchKey];
+    const orchStatus = orchData ? orchData.status : 'pending';
+    const orchCls = S.selectedKey === orchKey ? ' active' : '';
+    let html = '<div class="orch-card'+orchCls+'" data-key="'+orchKey+'">';
+    html += '<div class="orch-icon">' + (orchStatus==='done' ? '&#10003;' : orchStatus==='running' ? '&#9881;' : '&#9673;') + '</div>';
+    html += '<div class="orch-info"><div class="orch-title">Orchestrator</div>';
+    html += '<div class="orch-sub">' + (orchStatus==='done' ? 'Plan created' : orchStatus==='running' ? 'Planning...' : 'Pending') + '</div>';
+    html += '</div></div>';
 
-      const statusIcon = ms.status === 'done' ? '&#x2705;'
-        : ms.status === 'running' ? '&#x27F3;'
-        : ms.status === 'manual' ? '&#x26A0;&#xFE0F;'
-        : '&#x23F3;';
+    S.milestones.forEach((ms, i) => {
+      html += '<div class="pipe-line"></div>';
+      const msCls = ms.status === 'running' ? ' ms-running' : ms.status === 'done' ? ' ms-done' : ms.status === 'manual' ? ' ms-manual' : '';
 
-      html += '<div class="milestone-box">';
-      html += '<div class="milestone-header">';
-      html += '<span>' + ms.id + ': ' + escHtml(ms.name) + '</span>';
-      html += '<span>' + statusIcon;
-      if (ms.fixCycles > 0) html += '<span class="fix-badge">Fix ' + ms.fixCycles + '</span>';
-      html += '</span></div>';
-      html += '<div class="milestone-agents">';
+      // Progress calc
+      const agStats = Object.values(ms.agents);
+      const doneCount = agStats.filter(s => s === 'done').length;
+      const pct = Math.round((doneCount / 3) * 100);
 
-      ['backend', 'frontend', 'reviewer'].forEach(agent => {
-        const agentStatus = ms.agents?.[agent] || 'pending';
-        const key = agentKey(agent, ms.id);
-        const isSelected = state.selectedAgent === key;
-        const cls = 'agent-box ' + agentStatus + (isSelected ? ' active' : '');
-        html += '<div class="' + cls + '" data-key="' + key + '">';
-        html += '<div class="icon"></div>';
-        html += '<div class="label">' + capitalize(agent) + '</div>';
+      html += '<div class="ms-card'+msCls+'">';
+      html += '<div class="ms-head" data-ms="'+ms.id+'">';
+      html += '<span class="ms-idx">'+(i+1)+'</span>';
+      html += '<span class="ms-name">'+esc(ms.name)+'</span>';
+      if (ms.fixCycles > 0) html += '<span class="ms-fix-badge">Fix '+ms.fixCycles+'</span>';
+      html += '<span class="ms-status-icon">'+(ms.status==='done'?'&#10003;':ms.status==='running'?'&#9679;':ms.status==='manual'?'&#9888;':'')+'</span>';
+      html += '</div>';
+      html += '<div class="ms-progress-bar"><div class="ms-progress-fill" style="width:'+pct+'%"></div></div>';
+      html += '<div class="ms-agents">';
+
+      [{key:'backend',label:'BE'},{key:'frontend',label:'FE'},{key:'reviewer',label:'RV'}].forEach(a => {
+        const agKey = akey(a.key, ms.id);
+        const st = ms.agents[a.key] || 'pending';
+        const sel = (S.selectedKey === agKey || (S.selectedKey === '__live' && S.liveKey === agKey)) ? ' ag-selected' : '';
+        const agData = S.agents[agKey];
+        const durText = agData && agData.duration > 0 ? dur(agData.duration) : '';
+        html += '<div class="ag ag-'+st+sel+'" data-key="'+agKey+'">';
+        html += '<div class="ag-icon"></div>';
+        html += '<div class="ag-label">'+a.label+'</div>';
+        if (durText) html += '<div class="ag-dur">'+durText+'</div>';
         html += '</div>';
       });
 
       html += '</div></div>';
     });
 
-    $flowContent.innerHTML = html;
+    $pipeContent.innerHTML = html;
 
-    // Attach click handlers
-    $flowContent.querySelectorAll('.agent-box').forEach(el => {
-      el.addEventListener('click', () => selectAgent(el.dataset.key));
+    // Click handlers
+    $pipeContent.querySelectorAll('[data-key]').forEach(el => {
+      el.addEventListener('click', () => {
+        const key = el.dataset.key;
+        S.selectedKey = key;
+        showAgent(key, false);
+        renderPipeline();
+        renderAgentTabs();
+      });
     });
   }
 
-  // ─── Select agent for detail view ──────────────
-  function selectAgent(key) {
-    state.selectedAgent = key;
-    const agentData = state.agents[key];
+  // ═══ RENDER: AGENT TABS ═════════════════════════
+  function renderAgentTabs() {
+    // Keep the live tab + build tabs for all agents
+    let html = '';
 
-    if (!agentData) {
-      $detailTabs.style.display = 'none';
-      $detailPlaceholder.style.display = 'flex';
-      $detailPlaceholder.textContent = 'No data yet for this agent';
+    // Live tab
+    const liveCls = S.selectedKey === '__live' ? ' atab-active' : '';
+    const liveStatus = S.liveKey ? 'running' : 'done';
+    html += '<div class="atab'+liveCls+'" data-key="__live"><span class="atab-dot '+liveStatus+'"></span>Live</div>';
+
+    // Agent tabs
+    S.agentOrder.forEach(key => {
+      const ad = S.agents[key];
+      if (!ad) return;
+      const cls = S.selectedKey === key ? ' atab-active' : '';
+      const dotCls = ad.status === 'running' ? 'running' : ad.status === 'done' ? 'done' : 'failed';
+      const label = cap(ad.agent) + ' ' + ad.milestone;
+      html += '<div class="atab'+cls+'" data-key="'+key+'"><span class="atab-dot '+dotCls+'"></span>'+esc(label)+'</div>';
+    });
+
+    // Right controls
+    html += '<div class="atab-right"><button class="toggle-panel" id="btn-toggle-right2" title="Toggle details panel">&#9776;</button></div>';
+
+    $agentTabs.innerHTML = html;
+
+    // Click handlers
+    $agentTabs.querySelectorAll('.atab').forEach(el => {
+      el.addEventListener('click', () => {
+        const key = el.dataset.key;
+        if (!key) return;
+        S.selectedKey = key;
+        if (key === '__live') {
+          showAgent(S.liveKey, true);
+        } else {
+          showAgent(key, false);
+        }
+        renderAgentTabs();
+        renderPipeline();
+      });
+    });
+
+    // Toggle panel button
+    const btn = $('btn-toggle-right2');
+    if (btn) btn.addEventListener('click', toggleRightPanel);
+  }
+
+  // ═══ SHOW AGENT IN TERMINAL ═════════════════════
+  function showAgent(key, isLive) {
+    if (!key) {
+      $termBody.innerHTML = '';
+      $termBody.style.display = 'none';
+      $termPlaceholder.style.display = 'flex';
+      $termAgentName.textContent = '-';
+      $termStatus.textContent = 'idle';
       return;
     }
 
-    $detailTabs.style.display = 'flex';
-    $detailPlaceholder.style.display = 'none';
-    $promptContent.textContent = agentData.prompt || '(no prompt)';
-    $outputContent.textContent = agentData.output || '(no output yet)';
-    renderReview(agentData);
-
-    // Highlight selected in flow
-    $flowContent.querySelectorAll('.agent-box').forEach(el => {
-      el.classList.toggle('active', el.dataset.key === key);
-    });
-  }
-
-  // ─── Render review findings ─────────────────────
-  function renderReview(agentData) {
-    if (!agentData || !agentData.findings || agentData.findings.length === 0) {
-      $reviewContent.innerHTML = '<p style="color:var(--text-muted);padding:20px">No findings</p>';
+    const ad = S.agents[key];
+    if (!ad) {
+      $termBody.innerHTML = '';
+      $termBody.style.display = 'none';
+      $termPlaceholder.style.display = 'flex';
+      $termAgentName.textContent = '-';
+      $termStatus.textContent = 'no data';
       return;
     }
 
-    let html = '<table class="findings-table">';
-    html += '<tr><th>ID</th><th>Severity</th><th>Assignee</th><th>Description</th></tr>';
-    agentData.findings.forEach(f => {
-      const sevClass = 'severity-' + f.severity;
-      html += '<tr>';
-      html += '<td>' + escHtml(f.id) + '</td>';
-      html += '<td class="' + sevClass + '">' + escHtml(f.severity) + '</td>';
-      html += '<td>' + escHtml(f.assignee) + '</td>';
-      html += '<td>' + escHtml(f.description) + '</td>';
-      html += '</tr>';
-    });
-    html += '</table>';
-    $reviewContent.innerHTML = html;
+    $termBody.style.display = 'block';
+    $termPlaceholder.style.display = 'none';
+
+    // Set full output
+    $termBody.textContent = ad.output || '';
+    if (ad.status === 'running') {
+      // Add cursor
+      const cursor = document.createElement('span');
+      cursor.className = 'term-cursor';
+      $termBody.appendChild(cursor);
+    }
+
+    updateTermToolbar(key);
+
+    // Prompt
+    $promptContent.textContent = ad.prompt || '(no prompt)';
+
+    // Scroll to bottom
+    if (S.follow) $termBody.scrollTop = $termBody.scrollHeight;
   }
 
-  // ─── Add event log entry ────────────────────────
-  function addEventLogEntry(event) {
-    const time = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const desc = formatEventDesc(event);
-    const isCurrent = state.currentAgent && event.type === 'agent:start';
+  function appendTerminal(chunk) {
+    // Remove cursor if exists
+    const cursor = $termBody.querySelector('.term-cursor');
+    if (cursor) cursor.remove();
+
+    // Append text
+    $termBody.appendChild(document.createTextNode(chunk));
+
+    // Re-add cursor
+    const newCursor = document.createElement('span');
+    newCursor.className = 'term-cursor';
+    $termBody.appendChild(newCursor);
+
+    if (S.follow) $termBody.scrollTop = $termBody.scrollHeight;
+  }
+
+  function updateTermToolbar(key) {
+    const ad = S.agents[key];
+    if (!ad) return;
+    $termAgentName.textContent = cap(ad.agent) + ':' + ad.milestone;
+    const st = ad.status === 'running' ? 'streaming...'
+      : ad.status === 'done' ? 'completed (' + dur(ad.duration) + ')'
+      : 'failed (' + dur(ad.duration) + ')';
+    $termStatus.textContent = st;
+  }
+
+  // ═══ RENDER: TASKS ══════════════════════════════
+  function renderTasks() {
+    if (S.milestones.length === 0) return;
+
+    // We don't have individual task data from events,
+    // so show per-milestone agent tasks
+    let html = '';
+    S.milestones.forEach(ms => {
+      html += '<div class="task-group-title">'+esc(ms.id)+': '+esc(ms.name)+'</div>';
+
+      // Show agent task IDs
+      S.agentOrder.forEach(key => {
+        const ad = S.agents[key];
+        if (!ad || ad.milestone !== ms.id || ad.agent === 'reviewer' || ad.agent === 'orchestrator') return;
+        ad.tasks.forEach(tid => {
+          const isDone = ad.status === 'done';
+          const isRunning = ad.status === 'running';
+          const checkCls = isDone ? 'done' : isRunning ? 'running' : '';
+          const titleCls = isDone ? ' done' : '';
+          html += '<div class="task-item">';
+          html += '<div class="task-check '+checkCls+'"></div>';
+          html += '<span class="task-id">'+esc(tid)+'</span>';
+          html += '<span class="task-title'+titleCls+'">'+esc(tid)+'</span>';
+          html += '<span class="task-assignee '+ad.agent+'">'+ad.agent.substring(0,2)+'</span>';
+          html += '</div>';
+        });
+      });
+
+      // If no tasks shown yet for this milestone
+      const hasTasks = S.agentOrder.some(k => {
+        const ad = S.agents[k];
+        return ad && ad.milestone === ms.id && ad.agent !== 'reviewer' && ad.agent !== 'orchestrator' && ad.tasks.length > 0;
+      });
+      if (!hasTasks) {
+        html += '<div class="task-item" style="color:var(--text-3);font-style:italic">Awaiting tasks...</div>';
+      }
+    });
+
+    $tasksPanel.innerHTML = html;
+  }
+
+  // ═══ RENDER: REVIEW ═════════════════════════════
+  function renderReview() {
+    // Find latest review data
+    let latestReview = null;
+    S.agentOrder.forEach(key => {
+      const ad = S.agents[key];
+      if (ad && ad.agent === 'reviewer' && ad.findings && ad.findings.length > 0) {
+        latestReview = ad;
+      }
+    });
+
+    if (!latestReview) {
+      $reviewPanel.innerHTML = '<div class="empty-state"><div class="es-icon">&#9878;</div><div class="es-text">No review findings yet</div></div>';
+      return;
+    }
+
+    let html = '';
+    if (latestReview.verdict) {
+      const cls = latestReview.verdict === 'PASS' ? 'pass' : 'fail';
+      html += '<div class="review-verdict '+cls+'">'+latestReview.verdict+'</div>';
+    }
+
+    latestReview.findings.forEach(f => {
+      const sevCls = 'sev-' + (f.severity || 'minor');
+      html += '<div class="finding-card">';
+      html += '<div class="finding-header">';
+      html += '<span class="finding-id">'+esc(f.id)+'</span>';
+      html += '<span class="sev '+sevCls+'">'+esc(f.severity)+'</span>';
+      html += '<span class="task-assignee '+(f.assignee||'')+'">'+(f.assignee||'')+'</span>';
+      html += '</div>';
+      html += '<div class="finding-desc">'+esc(f.description)+'</div>';
+      if (f.suggestion) html += '<div class="finding-suggestion">'+esc(f.suggestion)+'</div>';
+      html += '</div>';
+    });
+
+    $reviewPanel.innerHTML = html;
+  }
+
+  // ═══ EVENT LOG ══════════════════════════════════
+  const evIcons = {
+    'mission:start':'&#9654;','mission:done':'&#9632;',
+    'plan:created':'&#9998;',
+    'milestone:start':'&#9654;','milestone:done':'&#9632;',
+    'agent:start':'&#9654;','agent:done':'&#9632;',
+    'review:start':'&#128269;','review:done':'&#9878;',
+    'fix:start':'&#128295;','fix:done':'&#10003;',
+    'verify:start':'&#128269;','verify:done':'&#9878;',
+    'error':'&#9888;',
+  };
+
+  const evTypeClass = {
+    'mission:start':'t-mission','mission:done':'t-mission',
+    'plan:created':'t-plan',
+    'milestone:start':'t-milestone','milestone:done':'t-milestone',
+    'agent:start':'t-agent','agent:done':'t-agent',
+    'review:start':'t-review','review:done':'t-review',
+    'fix:start':'t-fix','fix:done':'t-fix',
+    'verify:start':'t-verify','verify:done':'t-verify',
+    'error':'t-error',
+  };
+
+  const evFilterMap = {
+    'all': () => true,
+    'agent': ev => ev.type.startsWith('agent:'),
+    'milestone': ev => ev.type.startsWith('milestone:') || ev.type.startsWith('plan:'),
+    'error': ev => ev.type === 'error',
+  };
+
+  function addEventEntry(event) {
+    if (event.type === 'agent:output') return;
+
+    const time = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    const desc = evDesc(event);
+    const icon = evIcons[event.type] || '&#183;';
+    const typeCls = evTypeClass[event.type] || '';
+    const errCls = event.type === 'error' ? ' ev-error' : '';
 
     const div = document.createElement('div');
-    div.className = 'event-entry' + (isCurrent ? ' current' : '');
-    div.innerHTML = '<span class="time">' + time + '</span>'
-      + '<span class="type">' + escHtml(event.type) + '</span>'
-      + '<span class="desc">' + escHtml(desc) + '</span>';
-    $eventEntries.appendChild(div);
+    div.className = 'ev' + errCls;
+    div.dataset.evtype = event.type;
+    div.innerHTML = '<span class="ev-time">'+time+'</span>'
+      +'<span class="ev-icon">'+icon+'</span>'
+      +'<span class="ev-type '+typeCls+'">'+esc(event.type)+'</span>'
+      +'<span class="ev-desc">'+esc(desc)+'</span>';
 
-    if (autoScroll) {
-      $eventLog.scrollTop = $eventLog.scrollHeight;
-    }
+    // Apply filter
+    const filterFn = evFilterMap[S.elogFilter] || evFilterMap['all'];
+    if (!filterFn(event)) div.style.display = 'none';
+
+    $elogEntries.appendChild(div);
+    $elogCount.textContent = S.events.filter(e => e.type !== 'agent:output').length + ' events';
+
+    if (elogAutoScroll) $elogScroll.scrollTop = $elogScroll.scrollHeight;
   }
 
-  function formatEventDesc(event) {
-    const p = event.payload;
-    switch (event.type) {
-      case 'mission:start': return p.mission?.substring(0, 60);
-      case 'plan:created': return p.milestones?.length + ' milestones, ' + p.taskCount + ' tasks';
-      case 'milestone:start': return p.id + ': ' + p.title;
-      case 'milestone:done': return p.id + ' ' + p.status;
-      case 'agent:start': return p.agent + ' ' + p.milestone + ' [' + (p.tasks?.join(', ') || '') + ']';
-      case 'agent:done': return p.agent + ' ' + p.milestone + (p.success ? ' done' : ' FAILED') + ' (' + formatDuration(p.duration) + ')';
-      case 'review:done': return p.milestone + ' ' + p.verdict + ' (' + (p.findings?.length || 0) + ' findings)';
-      case 'fix:start': return p.milestone + ' cycle ' + p.cycle;
-      case 'verify:done': return p.milestone + ' cycle ' + p.cycle + ' ' + p.verdict;
-      case 'mission:done': return p.milestonesCompleted + '/' + p.total + ' milestones (' + formatDuration(p.duration) + ')';
+  function evDesc(ev) {
+    const p = ev.payload;
+    switch(ev.type) {
+      case 'mission:start': return (p.mission||'').substring(0,80);
+      case 'plan:created': return (p.milestones?.length||0)+' milestones, '+(p.taskCount||0)+' tasks';
+      case 'milestone:start': return p.id+': '+p.title;
+      case 'milestone:done': return p.id+' '+p.status;
+      case 'agent:start': return p.agent+' '+p.milestone+' ['+(p.tasks?.join(', ')||'')+']';
+      case 'agent:done': return p.agent+' '+p.milestone+(p.success?' done':' FAILED')+' ('+dur(p.duration)+')';
+      case 'review:start': return p.milestone;
+      case 'review:done': return p.milestone+' '+p.verdict+' ('+(p.findings?.length||0)+' findings)';
+      case 'fix:start': return p.milestone+' cycle '+p.cycle;
+      case 'fix:done': return p.milestone+' cycle '+p.cycle;
+      case 'verify:start': return p.milestone+' cycle '+p.cycle;
+      case 'verify:done': return p.milestone+' '+p.verdict;
+      case 'mission:done': return p.milestonesCompleted+'/'+p.total+' milestones ('+dur(p.duration)+')';
       case 'error': return p.message;
-      default: return JSON.stringify(p).substring(0, 80);
+      default: return JSON.stringify(p).substring(0,100);
     }
   }
 
-  // ─── Process event ─────────────────────────────
+  function applyElogFilter(filter) {
+    S.elogFilter = filter;
+    document.querySelectorAll('.elog-filter').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
+    const filterFn = evFilterMap[filter] || evFilterMap['all'];
+    $elogEntries.querySelectorAll('.ev').forEach(el => {
+      el.style.display = filterFn({type: el.dataset.evtype}) ? '' : 'none';
+    });
+  }
+
+  // ═══ PROCESS EVENT ══════════════════════════════
   function processEvent(event) {
-    state.events.push(event);
-    const handler = handlers[event.type];
-    if (handler) handler(event.payload);
-    if (event.type !== 'agent:output') {
-      addEventLogEntry(event);
-    }
+    S.events.push(event);
+    const h = H[event.type];
+    if (h) h(event.payload);
+    addEventEntry(event);
+
+    // Update tasks view on agent events
+    if (event.type === 'agent:start' || event.type === 'agent:done') renderTasks();
   }
 
-  // ─── WebSocket ──────────────────────────────────
+  // ═══ WEBSOCKET ══════════════════════════════════
   function connect() {
-    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(protocol + '//' + location.host);
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(proto + '//' + location.host);
 
     ws.onopen = () => {
-      $statusBadge.textContent = 'Connected';
-      $statusBadge.className = 'badge running';
+      $connDot.className = 'dot dot-green';
+      $connLabel.textContent = 'Connected';
     };
 
     ws.onmessage = (msg) => {
       try {
         const data = JSON.parse(msg.data);
         if (data.type === 'snapshot') {
-          // Replay all events from snapshot
-          const events = data.payload?.events || [];
-          events.forEach(e => processEvent(e));
+          (data.payload?.events || []).forEach(e => processEvent(e));
         } else {
           processEvent(data);
         }
-      } catch (e) {
-        console.error('Failed to parse message:', e);
-      }
+      } catch(e) { console.error('Parse error:', e); }
     };
 
     ws.onclose = () => {
-      $statusBadge.textContent = 'Disconnected';
-      $statusBadge.className = 'badge failed';
-      // Reconnect after 3 seconds
+      $connDot.className = 'dot dot-red';
+      $connLabel.textContent = 'Disconnected';
       setTimeout(connect, 3000);
     };
 
-    ws.onerror = () => {
-      ws.close();
-    };
+    ws.onerror = () => ws.close();
   }
 
-  // ─── Helpers ────────────────────────────────────
-  function escHtml(s) {
-    if (!s) return '';
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // ═══ UI INTERACTIONS ════════════════════════════
+
+  // Right tabs
+  document.querySelectorAll('.rtab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.rtab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.rpanel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      $(tab.dataset.panel).classList.add('active');
+    });
+  });
+
+  // Event log filters
+  document.querySelectorAll('.elog-filter').forEach(btn => {
+    btn.addEventListener('click', () => applyElogFilter(btn.dataset.filter));
+  });
+
+  // Event log auto-scroll
+  $elogScroll.addEventListener('scroll', () => {
+    elogAutoScroll = ($elogScroll.scrollHeight - $elogScroll.scrollTop - $elogScroll.clientHeight) < 30;
+  });
+
+  // Follow button
+  $('btn-follow').addEventListener('click', function() {
+    S.follow = !S.follow;
+    this.classList.toggle('active', S.follow);
+    if (S.follow) $termBody.scrollTop = $termBody.scrollHeight;
+  });
+
+  // Copy button
+  $('btn-copy').addEventListener('click', () => {
+    const text = $termBody.textContent || '';
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = $('btn-copy');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 1500);
+    });
+  });
+
+  // Wrap button
+  $('btn-wrap').addEventListener('click', function() {
+    S.wrap = !S.wrap;
+    this.classList.toggle('active', S.wrap);
+    $termBody.style.whiteSpace = S.wrap ? 'pre-wrap' : 'pre';
+  });
+
+  // Search
+  $('btn-search').addEventListener('click', toggleSearch);
+  $('search-close').addEventListener('click', toggleSearch);
+
+  function toggleSearch() {
+    S.searchVisible = !S.searchVisible;
+    $('term-search').classList.toggle('visible', S.searchVisible);
+    if (S.searchVisible) $('search-input').focus();
   }
 
-  function capitalize(s) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
+  $('search-input').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    // Simple highlight approach
+    if (!q) {
+      $('search-count').textContent = '';
+      return;
+    }
+    const text = $termBody.textContent || '';
+    const count = (text.toLowerCase().match(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'g')) || []).length;
+    $('search-count').textContent = count + ' matches';
+  });
 
-  // ─── Init ───────────────────────────────────────
+  // Keyboard shortcut
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+      e.preventDefault();
+      toggleSearch();
+    }
+  });
+
+  // Toggle right panel
+  function toggleRightPanel() {
+    const rp = $('right-panel');
+    rp.style.display = rp.style.display === 'none' ? '' : 'none';
+  }
+  $('btn-toggle-right').addEventListener('click', toggleRightPanel);
+
+  // Event log resize
+  const resizeHandle = $('elog-resize');
+  let resizing = false;
+  resizeHandle.addEventListener('mousedown', (e) => {
+    resizing = true;
+    resizeHandle.classList.add('dragging');
+    document.body.style.cursor = 'ns-resize';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', (e) => {
+    if (!resizing) return;
+    const logEl = $('event-log');
+    const newH = window.innerHeight - e.clientY - 4;
+    logEl.style.height = Math.max(80, Math.min(500, newH)) + 'px';
+  });
+  document.addEventListener('mouseup', () => {
+    if (resizing) {
+      resizing = false;
+      resizeHandle.classList.remove('dragging');
+      document.body.style.cursor = '';
+    }
+  });
+
+  // ═══ INIT ═══════════════════════════════════════
+  renderAgentTabs();
   connect();
 })();
 </script>
